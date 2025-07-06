@@ -199,7 +199,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedRooms.add(data.sessionId);
     } catch (err) {
       this.logger.error('joinGameSession error', err);
-      throw new WsException(
+      client.emit(
+        'gameSessionJoinError',
         err instanceof Error ? err.message : 'Join session failed',
       );
     }
