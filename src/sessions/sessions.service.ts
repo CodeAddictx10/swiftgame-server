@@ -75,7 +75,6 @@ export class SessionsService {
   }
 
   generateWinningNumber(): number {
-    return 6;
     return Math.floor(Math.random() * 10) + 1;
   }
 
