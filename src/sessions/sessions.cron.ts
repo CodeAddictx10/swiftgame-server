@@ -1,10 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SessionsService } from './sessions.service';
 import { GameGateway } from './game.gateway';
-import { Timeout } from '@nestjs/schedule';
-
-const SESSION_INTERVAL = 40000; // 40 seconds
-const GAME_DURATION = 30000; // 30 seconds
+import { Interval } from '@nestjs/schedule';
+import { GAME_DURATION, SESSION_INTERVAL } from 'src/core/constant';
 
 @Injectable()
 export class SessionsCron {
@@ -47,7 +45,7 @@ export class SessionsCron {
 
     const session = await this.sessionService.createSession();
     this.sessionService.setCurrentSession(session);
-    this.logger.log('Session started', session);
+    // this.logger.log('Session started', session);
     this.gateway.emitToAll('sessionEvents', {
       type: 'sessionStarted',
       data: {
@@ -57,14 +55,13 @@ export class SessionsCron {
       },
     });
 
-    // Schedule session end
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(async () => {
       const current = this.sessionService.getCurrentSession();
       if (!current) return;
 
       const result = await this.sessionService.endSession(current.id);
-      this.logger.log('Session ended', result);
+      // this.logger.log('Session ended', result);
 
       this.gateway.emitToAll('sessionEvents', {
         type: 'sessionEnded',
@@ -89,9 +86,8 @@ export class SessionsCron {
     }, GAME_DURATION);
   }
 
-  @Timeout(10000)
-  clearOldSessions() {
-    this.logger.log('Clearing old sessions');
-    // await this.sessionService.deleteOldSessions();
+  @Interval(SESSION_INTERVAL * 50)
+  async clearOldSessions() {
+    await this.sessionService.deleteOldSessions();
   }
 }

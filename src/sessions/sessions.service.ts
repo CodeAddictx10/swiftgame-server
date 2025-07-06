@@ -65,12 +65,12 @@ export class SessionsService {
 
   async deleteOldSessions() {
     await this.prisma.gameSession.deleteMany({
-      // where: {
-      //   numberOfPlayers: null,
-      //   status: {
-      //     not: GameSessionStatus.ACTIVE,
-      //   },
-      // },
+      where: {
+        numberOfPlayers: null,
+        status: {
+          not: GameSessionStatus.ACTIVE,
+        },
+      },
     });
   }
 

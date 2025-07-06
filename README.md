@@ -63,3 +63,11 @@ The api endpoint are all protected by default by using a global auth guard. For 
 - **SESSION_INTERVAL**: 40s (session loop)
 - **GAME_DURATION**: 30s (active session time)
 - Remaining 10s is buffer until next session starts.
+
+## Setup
+1. Clone git repo
+2. Run
+```
+pnpm install
+pnpm run start:dev
+```

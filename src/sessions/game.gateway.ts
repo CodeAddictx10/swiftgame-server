@@ -15,6 +15,7 @@ import { AuthenticatedSocket, JwtPayload } from 'src/core/types';
 import { PrismaService } from 'src/prisma.service';
 import { SessionsService } from './sessions.service';
 import { Logger } from '@nestjs/common';
+import { GAME_DURATION, SESSION_INTERVAL } from 'src/core/constant';
 
 @WebSocketGateway({
   cors: {
@@ -64,8 +65,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const currentSession = this.sessionsService.getCurrentSession();
     const timeLeft =
-      this.sessionsService.getTimeLeftInCurrentSession(30000) / 1000;
-    const nextIn = this.sessionsService.getTimeUntilNextSession(40000) / 1000;
+      this.sessionsService.getTimeLeftInCurrentSession(GAME_DURATION) / 1000;
+    const nextIn =
+      this.sessionsService.getTimeUntilNextSession(SESSION_INTERVAL) / 1000;
 
     client.emit('sessionEvents', {
       type: 'sessionInit',
@@ -103,8 +105,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleSessionInit(@ConnectedSocket() client: AuthenticatedSocket) {
     const currentSession = this.sessionsService.getCurrentSession();
     const timeLeft =
-      this.sessionsService.getTimeLeftInCurrentSession(30000) / 1000;
-    const nextIn = this.sessionsService.getTimeUntilNextSession(40000) / 1000;
+      this.sessionsService.getTimeLeftInCurrentSession(GAME_DURATION) / 1000;
+    const nextIn =
+      this.sessionsService.getTimeUntilNextSession(SESSION_INTERVAL) / 1000;
 
     client.emit('sessionEvents', {
       type: 'sessionInit',
@@ -122,10 +125,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: AuthenticatedSocket,
   ): Promise<WsException | void> {
     try {
-      this.logger.log('joinGameSession', data);
       const userId = client.user.id;
-
-      this.logger.log('userId', userId);
 
       const session = await this.prisma.gameSession.findUnique({
         where: { id: data.sessionId },
@@ -144,14 +144,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           },
         },
       });
-      this.logger.log('existing', existing);
 
       if (existing) {
         client.emit(
           'gameSessionJoinError',
           'You have already joined this session',
         );
-        // throw new WsException('Already joined');
         return;
       }
 
@@ -188,7 +186,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         ...session,
         participants,
         timeLeft:
-          this.sessionsService.getTimeLeftInCurrentSession(30000) / 1000,
+          this.sessionsService.getTimeLeftInCurrentSession(GAME_DURATION) /
+          1000,
       });
 
       client.to(session.id).emit('participantEnteredGameSession', {
@@ -244,7 +243,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   isConnectedToRoom(roomId: string) {
-    this.logger.log('isConnectedToRoom', roomId, this.connectedRooms);
     return this.connectedRooms.has(roomId);
   }
 
