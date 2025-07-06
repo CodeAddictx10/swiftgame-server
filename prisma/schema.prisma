@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  gameParticipations UserGameSession[]
+
+  @@map("users")
+}
+
+model GameSession {
+  id              String            @id @default(cuid())
+  startTime       DateTime          @default(now())
+  endTime         DateTime?
+  duration        Int               @default(20) // Duration in seconds
+  winningNumber   Int?
+  status          GameSessionStatus @default(ACTIVE)
+  numberOfPlayers Int?              @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  participants UserGameSession[]
+
+  @@map("game_sessions")
+}
+
+model UserGameSession {
+  id             String   @id @default(cuid())
+  userId         String
+  gameSessionId  String
+  selectedNumber Int?     @default(0)
+  isWinner       Boolean  @default(false)
+  joinedAt       DateTime @default(now())
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameSession GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameSessionId])
+  @@map("user_game_sessions")
+}
+
+enum GameSessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
